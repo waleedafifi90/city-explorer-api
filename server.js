@@ -2,33 +2,18 @@ const express = require('express');
 require('dotenv').config();
 const cors = require('cors');
 const axios = require('axios');
+const {handleWeather} = require('./modules/weather');
 
 const app = express();
 app.use(cors());
 
-const weatherData = require('./data/weather.json');
+// const weatherData = require('./data/weather.json');
 
-app.get('/weather', async (req, res) => {
-  const searchQuery = req.query.searchQuery;
-  const lat = req.query.lat;
-  const lon = req.query.lon;
-  // WEATHER_API_KEY
-  // const cityArr = weatherData.find(item => item.city_name.toLowerCase() === searchQuery.toLowerCase())
-  const cityArr = await axios.get(`https://api.weatherbit.io/v2.0/forecast/daily?lat=${lat}&lon=${lon}&key=${process.env.WEATHER_API_KEY}`);
-  console.log(cityArr.data)
-  try {
-    const cityData = cityArr.data.data.map(item => new Forecast(item));
-    // console.log(cityData)
-    res.status(200).send(cityData)
-  } catch (error) {
-    errorHandler(error, res)
-  }
-
-  // res.send({cityArr})
-});
+app.get('/weather', handleWeather)
 
 app.get('/movies', async (req, res) => {
-  const searchQuery = req.query.searchQuery;
+  const {searchQuery, lat, lon} = req.query;
+  
   const movieArr = await axios.get(`https://api.themoviedb.org/3/search/movie?api_key=${process.env.MOVIE_API_KEY}&query=${searchQuery}`);
 
   try {
@@ -43,14 +28,6 @@ app.get('*', (req, res) => {res.status(404).send('Page not found!')})
 
 function errorHandler(error, res) {
   res.status(500).send({error: 'Something went wrong'})
-}
-
-
-class Forecast {
-  constructor(day) {
-    this.date = day.valid_date;
-    this.descriptioin = day.weather.description;
-  }
 }
 
 class Movie {
